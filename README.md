@@ -4,23 +4,49 @@ systemd-boot does not have built in entries for powering off/reseting from the m
 
 ## Testing
 
+**x86-64**
+
+*x86_64-unknown-linux-gnu*
+
 ```
 $ cp $OVMF_DIR/OVMF.fd ./qemu/ovmf.fd
-$ dd if=/dev/zero of=/path/to/uefi.img bs=512 count=93750
-$ parted /path/to/uefi.img -s -a minimal mklabel gpt
-$ parted /path/to/uefi.img -s -a minimal mkpart EFI FAT16 2048s 93716s
-$ parted /path/to/uefi.img -s -a minimal toggle 1 boot
-$ dd if=/dev/zero of=/tmp/part.img bs=512 count=91669
-$ mformat -i /tmp/part.img -h 32 -t 32 -n 64 -c 1
 $ make/nix build
-$ mcopy -i /tmp/part.img poweroff.efi reboot.efi ::
-$ dd if=/tmp/part.img of=qemu/uefi.img bs=512 count=91669 seek=2048 conv=notrunc
+$ cp XXX.efi root/XXX.efi
 $ qemu-system-x86_64 \
     -bios qemu/ovmf.fd \
-    -drive file=qemu/uefi.img,if=ide \
+    -drive format=raw,file=fat:rw:root \
     -net none \
     -nographic
 ```
+
+**aarch64**
+
+Help from: http://cdn.kernel.org/pub/linux/kernel/people/will/docs/qemu/qemu-arm64-howto.html
+
+*aarch64-unknown-linux-gnu*
+
+```
+$ cp $OVMF_DIR/QEMU_EFI.fd ./qemu/efi.img
+$ truncate -s 64m efi.img
+$ truncate -s 64m varstore.img
+$ dd if=$OVMF_DIR/QEMU_EFI.fd of=efi.img conv=notrunc
+$ make/nix build
+$ cp XXX.efi root/XXX.efi
+$ qemu-system-aarch64 -M virt -cpu cortex-a57 \
+    -drive file=qemu/efi.img,if=pflash,format=raw,readonly=true \
+    -drive file=qemu/varstore.img,if=pflash,format=raw \
+    -net none -nographic \
+    -drive format=raw,file=fat:rw:root
+```
+
+**
+
+
+## Automated Testing
+
+See boot tests for inspiration:
+
+https://github.com/NixOS/nixpkgs/blob/master/nixos/tests/boot.nix
 
 # UEFI Development Resources
 

@@ -13,7 +13,7 @@
     cc-server,
   }: let
     system = "x86_64-linux";
-    pkgs = nixpkgs.legacyPackages.${system};
+    hostpkgs = nixpkgs.legacyPackages.${system};
     editor = neovim-flake.packages.${system}.nix.extendConfiguration {
       modules = [
         {
@@ -21,30 +21,43 @@
           vim.git.gitsigns.codeActions = false;
         }
       ];
-      inherit pkgs;
+      pkgs = hostpkgs;
     };
 
-    cc-stdenv = (pkgs.callPackage cc-server {}).wrap pkgs.stdenv;
+    buildEfi = pkgs:
+      pkgs.stdenv.mkDerivation {
+        name = "efi-power";
+        src = ./.;
 
-    nativeBuildInputs = with pkgs; [socat gdb];
+        buildInputs = [pkgs.gnu-efi];
 
-    buildInputs = with pkgs; [gnu-efi];
+        hardeningDisable = ["stackprotector"];
+
+        makeFlags = [
+          "EFIDIR=${pkgs.gnu-efi}"
+          "DESTDIR=$(out)"
+          "HOSTCC=${pkgs.buildPackages.stdenv.cc.targetPrefix}cc"
+          "CROSS_COMPILE=${pkgs.stdenv.cc.targetPrefix}"
+        ];
+
+        EFI_DIR = pkgs.gnu-efi;
+      };
+
+    buildShell = pkgs:
+      (buildEfi pkgs).overrideAttrs (o: {
+        OVMF_PATH = "${pkgs.OVMF.fd}/FV";
+        nativeBuildInputs = with hostpkgs; [editor socat qemu];
+      });
+
+    pkgs = import nixpkgs {
+      inherit system;
+      crossSystem = {
+        config = "aarch64-unknown-linux-gnu";
+      };
+    };
   in {
-    packages.${system}.default = pkgs.stdenv.mkDerivation {
-      name = "efi-power";
-      src = ./.;
-      EFI_DIR = pkgs.gnu-efi;
-      hardeningDisable = ["stackprotector"];
-      makeFlags = ["DESTDIR=$(out)"];
-      inherit buildInputs;
-    };
+    packages.${system}.default = buildEfi pkgs;
 
-    devShells.${system}.default = (pkgs.mkShell.override {stdenv = cc-stdenv;}) {
-      EFI_DIR = pkgs.gnu-efi;
-      OVMF_PATH = "${pkgs.OVMF.fd}/FV";
-      hardeningDisable = ["stackprotector"];
-      nativeBuildInputs = nativeBuildInputs ++ [editor pkgs.qemu];
-      inherit buildInputs;
-    };
+    devShells.${system}.default = buildShell pkgs;
   };
 }

@@ -1,0 +1,6 @@
+/cc-server.log
+/compile_commands.json
+/qemu
+/result
+.ccls-cache
+*.efi

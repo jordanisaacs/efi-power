@@ -4,6 +4,10 @@ systemd-boot does not have built in entries for powering off/reseting from the m
 
 ## Testing
 
+Cross compilation utilizes nixpkgs. Just change the cross system with Nix and the efi image will cross compile.
+
+Tested on the following using qemu:
+
 **x86-64**
 
 *x86_64-unknown-linux-gnu*
@@ -26,21 +30,36 @@ Help from: http://cdn.kernel.org/pub/linux/kernel/people/will/docs/qemu/qemu-arm
 *aarch64-unknown-linux-gnu*
 
 ```
-$ cp $OVMF_DIR/QEMU_EFI.fd ./qemu/efi.img
-$ truncate -s 64m efi.img
+$ truncate -s 64m efi-aarch.img
 $ truncate -s 64m varstore.img
-$ dd if=$OVMF_DIR/QEMU_EFI.fd of=efi.img conv=notrunc
+$ dd if=$OVMF_DIR/QEMU_EFI.fd of=efi-aarch.img conv=notrunc
 $ make/nix build
 $ cp XXX.efi root/XXX.efi
 $ qemu-system-aarch64 -M virt -cpu cortex-a57 \
-    -drive file=qemu/efi.img,if=pflash,format=raw,readonly=true \
+    -drive file=qemu/efi-aarch.img,if=pflash,format=raw,readonly=true \
     -drive file=qemu/varstore.img,if=pflash,format=raw \
     -net none -nographic \
     -drive format=raw,file=fat:rw:root
 ```
 
-**
+**arm**
 
+*armv7l-unknown-linux-gnueabihf*
+
+Same as above.
+
+```
+$ truncate -s 64m efi-aarch.img
+$ truncate -s 64m varstore.img
+$ dd if=$OVMF_DIR/QEMU_EFI.fd of=efi-arm.img conv=notrunc
+$ make/nix build
+$ cp XXX.efi root/XXX.efi
+$ qemu-system-arm -M virt -cpu cortex-a7 \
+    -drive file=qemu/efi-arm.img,if=pflash,format=raw,readonly=true \
+    -drive file=qemu/varstore.img,if=pflash,format=raw \
+    -net none -nographic \
+    -drive format=raw,file=fat:rw:root
+```
 
 ## Automated Testing
 

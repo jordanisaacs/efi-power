@@ -39,20 +39,19 @@
           "HOSTCC=${pkgs.buildPackages.stdenv.cc.targetPrefix}cc"
           "CROSS_COMPILE=${pkgs.stdenv.cc.targetPrefix}"
         ];
-
-        EFI_DIR = pkgs.gnu-efi;
       };
 
     buildShell = pkgs:
       (buildEfi pkgs).overrideAttrs (o: {
-        OVMF_PATH = "${pkgs.OVMF.fd}/FV";
+        OVMF_DIR = "${pkgs.OVMF.fd}/FV";
         nativeBuildInputs = with hostpkgs; [editor socat qemu];
       });
 
     pkgs = import nixpkgs {
       inherit system;
       crossSystem = {
-        config = "aarch64-unknown-linux-gnu";
+        # config = "aarch64-unknown-linux-gnu";
+        config = "armv7l-unknown-linux-gnueabihf";
       };
     };
   in {

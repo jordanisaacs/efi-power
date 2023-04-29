@@ -6,57 +6,53 @@
   inputs.cc-server.url = "github:danielbarter/mini_compile_commands";
   inputs.cc-server.flake = false;
 
+  inputs.flake-utils.url = "github:numtide/flake-utils";
+
+  inputs.systems.url = "path:./systems.nix";
+  inputs.systems.flake = false;
+
   outputs = {
     self,
     nixpkgs,
     neovim-flake,
+    flake-utils,
+    systems,
     cc-server,
   }: let
-    system = "x86_64-linux";
-    hostpkgs = nixpkgs.legacyPackages.${system};
-    editor = neovim-flake.packages.${system}.nix.extendConfiguration {
-      modules = [
-        {
-          vim.languages.clang.enable = true;
-          vim.git.gitsigns.codeActions = false;
-        }
-      ];
-      pkgs = hostpkgs;
-    };
+    buildEfi = pkgs: pkgs.callPackage ./. {};
+  in
+    {
+      overlays.default = final: prev: {efi-power = buildEfi self;};
+      devShells.x86_64-linux.default = let
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        editor = neovim-flake.packages.x86_64-linux.nix.extendConfiguration {
+          modules = [
+            {
+              vim.languages.clang.enable = true;
+              vim.git.gitsigns.codeActions = false;
+            }
+          ];
+          inherit pkgs;
+        };
 
-    buildEfi = pkgs:
-      pkgs.stdenv.mkDerivation {
-        name = "efi-power";
-        src = ./.;
-
-        buildInputs = [pkgs.gnu-efi];
-
-        hardeningDisable = ["stackprotector"];
-
-        makeFlags = [
-          "EFIDIR=${pkgs.gnu-efi}"
-          "DESTDIR=$(out)"
-          "HOSTCC=${pkgs.buildPackages.stdenv.cc.targetPrefix}cc"
-          "CROSS_COMPILE=${pkgs.stdenv.cc.targetPrefix}"
-        ];
-      };
-
-    buildShell = pkgs:
-      (buildEfi pkgs).overrideAttrs (o: {
-        OVMF_DIR = "${pkgs.OVMF.fd}/FV";
-        nativeBuildInputs = with hostpkgs; [editor socat qemu];
-      });
-
-    pkgs = import nixpkgs {
-      inherit system;
-      crossSystem = {
-        # config = "aarch64-unknown-linux-gnu";
-        config = "armv7l-unknown-linux-gnueabihf";
-      };
-    };
-  in {
-    packages.${system}.default = buildEfi pkgs;
-
-    devShells.${system}.default = buildShell pkgs;
-  };
+        shell = (buildEfi pkgs).overrideAttrs (o: {
+          OVMF_DIR = "${pkgs.OVMF.fd}/FV";
+          nativeBuildInputs = with pkgs; [editor socat qemu];
+        });
+      in
+        shell;
+    }
+    // flake-utils.lib.eachSystem (import systems) (
+      system: let
+        supportsLegacy = builtins.elem system nixpkgs.lib.systems.flakeExposed;
+        pkgs =
+          if supportsLegacy
+          then nixpkgs.legacyPackages.${system}
+          else import nixpkgs {inherit system;};
+      in {
+        packages = {
+          default = buildEfi pkgs;
+        };
+      }
+    );
 }

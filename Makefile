@@ -12,7 +12,7 @@ OS       := $(shell uname -s)
 HOSTARCH ?= $(shell $(HOSTCC) -dumpmachine | cut -f1 -d- | sed -e s,i[3456789]86,ia32, -e 's,armv[67].*,arm,' )
 ARCH     ?= $(shell $(HOSTCC) -dumpmachine | cut -f1 -d- | sed -e s,i[3456789]86,ia32, -e 's,armv[67].*,arm,' )
 
-TARGETS = poweroff.efi reboot.efi hello.efi
+TARGETS = poweroff.efi reboot.efi
 
 # App subsystem
 SUBSYSTEM := 0xa

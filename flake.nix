@@ -22,7 +22,7 @@
     buildEfi = pkgs: pkgs.callPackage ./. {};
   in
     {
-      overlays.default = final: prev: {efi-power = buildEfi self;};
+      overlays.default = final: prev: {efi-power = buildEfi prev.pkgs;};
       devShells.x86_64-linux.default = let
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
         editor = neovim-flake.packages.x86_64-linux.nix.extendConfiguration {

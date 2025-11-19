@@ -1,6 +1,8 @@
 {
   description = "A very basic flake";
 
+  inputs.nixpkgs.url = "nixpkgs/nixpkgs-unstable";
+
   inputs.cc-server.url = "github:danielbarter/mini_compile_commands";
   inputs.cc-server.flake = false;
 

@@ -43,7 +43,7 @@ ifeq ($(ARCH),ia64)
 endif
 
 ifeq ($(ARCH),x86_64)
-  CPPFLAGS += -DGNU_EFI_USE_MS_ABI -DGNU_EFI_USE_EXTERNAL_STDARG -maccumulate-outgoing-args
+  CPPFLAGS += -DGNU_EFI_USE_MS_ABI -maccumulate-outgoing-args
   CFLAGS += -mno-red-zone
 endif
 

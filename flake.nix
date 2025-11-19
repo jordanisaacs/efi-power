@@ -8,15 +8,11 @@
 
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  inputs.systems.url = "path:./systems.nix";
-  inputs.systems.flake = false;
-
   outputs = {
     self,
     nixpkgs,
     neovim-flake,
     flake-utils,
-    systems,
     cc-server,
   }: let
     buildEfi = pkgs: pkgs.callPackage ./. {};
@@ -42,7 +38,7 @@
       in
         shell;
     }
-    // flake-utils.lib.eachSystem (import systems) (
+    // flake-utils.lib.eachSystem (import ./systems.nix) (
       system: let
         supportsLegacy = builtins.elem system nixpkgs.lib.systems.flakeExposed;
         pkgs =

@@ -929,8 +929,7 @@
         "cc-server": "cc-server",
         "flake-utils": "flake-utils",
         "neovim-flake": "neovim-flake",
-        "nixpkgs": "nixpkgs_4",
-        "systems": "systems_2"
+        "nixpkgs": "nixpkgs_4"
       }
     },
     "rust-overlay": {
@@ -1022,19 +1021,6 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
-      }
-    },
-    "systems_2": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1,
-        "narHash": "sha256-74DQRvm/ZuWt/zjugyRvKkcsNj0iN2R9ME8GQHWnXKA=",
-        "path": "./systems.nix",
-        "type": "path"
-      },
-      "original": {
-        "path": "./systems.nix",
-        "type": "path"
       }
     },
     "telescope": {

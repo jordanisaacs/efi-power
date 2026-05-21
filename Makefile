@@ -66,7 +66,7 @@ ifneq (mingw32,$(findstring mingw32, $(GCCMACHINE)))
   CFLAGS += -fpie
 endif
 
-# Set HAVE_EFI_OBJCOPY if objcopy understands --target efi-[app|bsdrv|rtdrv],
+# Set HAVE_EFI_OBJCOPY if objcopy understands --output-target efi-[app|bsdrv|rtdrv],
 # otherwise we need to compose the PE/COFF header using the assembler
 # aarch64 efi objcopy doesn't work
 ifeq ($(findstring $(ARCH),arm mips64el riscv64 loongarch64 aarch64),)
@@ -74,7 +74,7 @@ ifeq ($(findstring $(ARCH),arm mips64el riscv64 loongarch64 aarch64),)
 endif
 
 ifneq ($(HAVE_EFI_OBJCOPY),)
-  FORMAT := --target efi-app-$(ARCH)
+  FORMAT := --output-target efi-app-$(ARCH)
 else
   LDFLAGS += --defsym=EFI_SUBSYSTEM=$(SUBSYSTEM)
   FORMAT := -O binary
